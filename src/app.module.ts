@@ -2,7 +2,7 @@ import { DiscordModule } from '@discord-nestjs/core';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import { Intents } from 'discord.js'
+import { GatewayIntentBits } from 'discord.js'
 import { BotModule } from './bot/bot.module';
 import { UtilsModule } from './utils/utils.module';
 
@@ -18,7 +18,7 @@ import { UtilsModule } from './utils/utils.module';
       useFactory: () => ({
         token: process.env.DISCORD_TOKEN,
         discordClientOptions: {
-          intents: [Intents.FLAGS.GUILDS],
+          intents: [GatewayIntentBits.Guilds],
         },
         allowGuilds: [process.env.GUILD_ID],
       }),
