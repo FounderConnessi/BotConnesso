@@ -1,6 +1,6 @@
 import { TransformPipe } from '@discord-nestjs/common';
 import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, UsePipes } from '@discord-nestjs/core';
-import { channelMention, Client, EmbedBuilder, InteractionReplyOptions, TextChannel } from 'discord.js';
+import { Client, EmbedBuilder, hyperlink, InteractionReplyOptions, TextChannel } from 'discord.js';
 import { PollDto } from 'src/bot/dto';
 
 @UsePipes(TransformPipe)
@@ -25,7 +25,7 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
 
     if (message != undefined) {
       return {
-        content: 'Esiste già un sondaggio per questo utente! ' + channelMention(thread.id),
+        content: 'Esiste già un sondaggio per questo utente! ' + hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id),
         ephemeral: true
       };
     }
@@ -52,7 +52,7 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
     embed
       .setTitle('Inizio sondaggio')
       .setColor(0xff7264)
-      .setDescription("E' stato avviato il sondaggio in " + channelMention(thread.id) + "\nResterà aperto per 24h, ogni server esprime un voto.")
+      .setDescription("E' stato avviato il sondaggio in "+ hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id)+ "\nResterà aperto per 24h, ogni server esprime un voto.")
       .setFields()
       .setTimestamp()
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });

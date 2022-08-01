@@ -1,6 +1,6 @@
 import { TransformPipe } from '@discord-nestjs/common';
 import { DiscordTransformedCommand, Payload, SubCommand, TransformedCommandExecutionContext, UsePipes } from '@discord-nestjs/core';
-import { InteractionReplyOptions, EmbedBuilder, TextChannel, Colors, channelMention } from 'discord.js';
+import { InteractionReplyOptions, EmbedBuilder, TextChannel, Colors, hyperlink } from 'discord.js';
 import { ThreadDto } from 'src/bot/dto';
 
 @UsePipes(TransformPipe)
@@ -83,7 +83,7 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
           new EmbedBuilder()
             .setTitle('Fine sondaggio')
             .setColor(0xff7264)
-            .setDescription("Si è concluso il sondaggio in " + channelMention(thread.id))
+            .setDescription("Si è concluso il sondaggio in " + hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id))
             .setFields()
             .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
             .setTimestamp()

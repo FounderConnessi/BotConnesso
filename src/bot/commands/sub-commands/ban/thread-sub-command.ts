@@ -1,6 +1,6 @@
 import { TransformPipe } from '@discord-nestjs/common';
 import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, TransformedCommandExecutionContext, UsePipes } from '@discord-nestjs/core';
-import { channelMention, Client, EmbedBuilder, InteractionReplyOptions, roleMention, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
+import { Client, EmbedBuilder, hyperlink, InteractionReplyOptions, roleMention, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
 import { ThreadDto } from 'src/bot/dto';
 
 @UsePipes(TransformPipe)
@@ -16,7 +16,7 @@ export class BanThreadSubCommand implements DiscordTransformedCommand<ThreadDto>
 
     if (thread != undefined) {
       return {
-        content: 'Esiste già un thread aperto per questo utente ' + channelMention(thread.id),
+        content: 'Esiste già un thread aperto per questo utente ' + hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id),
         ephemeral: true
       };
     }
@@ -34,7 +34,7 @@ export class BanThreadSubCommand implements DiscordTransformedCommand<ThreadDto>
     const embed = new EmbedBuilder()
       .setTitle("Segnalazione aperta")
       .setAuthor({ name: user.username, iconURL: user.avatarURL() })
-      .setDescription("E' stata avviata una segnalazione su " + dto.nickname + "\nPartecipa alla discussione nella stanza " + channelMention(thread.id))
+      .setDescription("E' stata avviata una segnalazione su " + dto.nickname + "\nPartecipa alla discussione nella stanza " + hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id))
       .setColor(0xff7264)
       .setTimestamp()
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });
