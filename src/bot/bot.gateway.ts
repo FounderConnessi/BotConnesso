@@ -1,9 +1,9 @@
-import { Once, InjectDiscordClient } from '@discord-nestjs/core'
+import { Once, InjectDiscordClient, On, UseGuards } from '@discord-nestjs/core'
 import { Injectable, Logger } from '@nestjs/common';
-import { Client, GuildChannel } from 'discord.js';
+import { Client, GuildChannel, Message } from 'discord.js';
 import { UtilsService } from 'src/utils/utils.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-
+import { MessageAfterPollStarted, MessageFromBotGuard, MessagePinnedOrThreadCreated } from './guards';
 @Injectable()
 export class BotGateway {
 
@@ -13,33 +13,54 @@ export class BotGateway {
     @InjectDiscordClient()
     private readonly client: Client,
     private readonly utils: UtilsService 
-  ) {
-   
-  }
+  ) {}
 
   @Once('ready')
   async onReady() {
     this.logger.log(
       `Logged in as ${this.client.user.tag}!`,
-    );   
+    );  
   }
 
-  @Once('shardDisconnect')
-  async onDisconnect(){
-    this.logger.log(
-      `Disconnect as ${this.client.user.tag}!`,
-    );   
+  /**
+   * Elimina i messaggi di "messaggio fissato" e "thread creato" provenienti dal BOT.
+   */
+  @UseGuards(MessageFromBotGuard, MessagePinnedOrThreadCreated)
+  @On('messageCreate')
+  async onMessageCreate(message: Message): Promise<void>
+  {
+    message.delete();
   }
 
+
+  /**
+   * Elimina i messaggi inviati durante un sondaggio aperto.
+   */
+  @UseGuards(MessageAfterPollStarted)
+  @On('messageCreate')
+  async onMessageDuringPoll(message: Message): Promise<void>
+  {
+    message.delete();
+  }
+  
+
+  /**
+   * Motifica il nome di un canale dato il suo id e il nuovo nome.
+   * @param channelId Identificato del canale
+   * @param name nuovo nome del canale
+   */
   changeChannelName(channelId : string, name: string) {
     const channel = this.client.channels.cache.get(channelId) as GuildChannel;
     channel.setName(name);
     this.logger.log('Channel name has been updated (' + name + ')');
   }
 
+  /**
+   * Task di aggiornamento del contatore degli Utenti Connessi.
+   */
   @Cron(CronExpression.EVERY_5_MINUTES)
   async updateUtentiConnessi(){
     const utentiConnessi = await this.utils.getUtentiConnessi();
-    this.changeChannelName(process.env.CHANNEL_ID, process.env.CHANNEL_NAME.replace('%players%', utentiConnessi.toString()));
+    this.changeChannelName(process.env.CHANNEL_UC_ID, process.env.CHANNEL_UC_NAME.replace('%players%', utentiConnessi.toString()));
   }
 }

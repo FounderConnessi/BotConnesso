@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Ban {
+  uuid String @id
+  nickname  String? @unique
+
+  startDate DateTime @default(now())
+  endDate DateTime?
+  reason    String
+  valid Boolean @default(true)
+      
+  @@map("bans")
+}
