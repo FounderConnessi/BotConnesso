@@ -52,7 +52,7 @@ export class BotGateway {
   changeChannelName(channelId : string, name: string) {
     const channel = this.client.channels.cache.get(channelId) as GuildChannel;
     channel.setName(name);
-    this.logger.log('Channel name has been updated (' + name + ')');
+    //this.logger.log('Channel name has been updated (' + name + ')');
   }
 
   /**
