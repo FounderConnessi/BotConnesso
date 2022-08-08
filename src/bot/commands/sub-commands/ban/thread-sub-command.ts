@@ -12,7 +12,7 @@ export class BanThreadSubCommand implements DiscordTransformedCommand<ThreadDto>
   ) { }
   async handler(@Payload() dto: ThreadDto, context: TransformedCommandExecutionContext): Promise<InteractionReplyOptions> {
     const channel = this.client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    let thread = channel.threads.cache.find(x => x.name === 'Segnalazione su ' + dto.nickname);
+    let thread = channel.threads.cache.find(x => x.name === 'Segnalazione su ' + dto.nickname.toLowerCase());
 
     if (thread != undefined) {
       return {
@@ -22,7 +22,7 @@ export class BanThreadSubCommand implements DiscordTransformedCommand<ThreadDto>
     }
 
     thread = await channel.threads.create({
-      name: 'Segnalazione su ' + dto.nickname,
+      name: 'Segnalazione su ' + dto.nickname.toLowerCase(),
       autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
       reason: 'Segnalazione su ' + dto.nickname,
     });

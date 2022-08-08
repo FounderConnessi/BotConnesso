@@ -18,7 +18,7 @@ export class UnbanSubCommand implements DiscordTransformedCommand<UnBanDto> {
       where: dto,
     });
 
-    if (!ban) {
+    if (!ban || !ban.valid) {
       return {
         content: "Questo utente non risulta bannato!",
         ephemeral: true

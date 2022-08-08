@@ -14,7 +14,7 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
 
   async handler(@Payload() dto: PollDto): Promise<InteractionReplyOptions> {
     const channel = this.client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    const thread = channel.threads.cache.find(thread => thread.name === 'Segnalazione su ' + dto.nickname);
+    const thread = channel.threads.cache.find(thread => thread.name === 'Segnalazione su ' + dto.nickname.toLowerCase());
 
     if (thread == undefined) {
       return { content: 'Devi prima creare un thread per discutere del ban' };
@@ -43,8 +43,10 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
     message = thread.lastMessage;
 
     Promise.all([
-      message.react('👍'),
-      message.react('👎'),
+      message.react('🟢'),
+      message.react('🟡'),
+      message.react('🟠'),
+      message.react('🔴'),
       message.pin('Sondaggio'),
       thread.setLocked(true),
     ]);

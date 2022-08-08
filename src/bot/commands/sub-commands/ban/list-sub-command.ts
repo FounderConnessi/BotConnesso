@@ -1,6 +1,7 @@
-import { DiscordCommand, SubCommand } from '@discord-nestjs/core';
-import { EmbedBuilder, InteractionReplyOptions } from 'discord.js';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { DiscordCommand, SubCommand } from "@discord-nestjs/core";
+import { Gravity } from "@prisma/client";
+import { EmbedBuilder, InteractionReplyOptions } from "discord.js";
+import { PrismaService } from "src/prisma/prisma.service";
 
 @SubCommand({ name: 'list', description: 'Consulta la lista degli utenti nella blacklist' })
 export class BanListSubCommand implements DiscordCommand {
@@ -15,7 +16,8 @@ export class BanListSubCommand implements DiscordCommand {
       select: {
         uuid: true,
         nickname: true,
-        reason: true
+        reason: true,
+        gravity: true,
       }
     });
 
@@ -34,6 +36,20 @@ export class BanListSubCommand implements DiscordCommand {
           { name: 'Nickname', value: ban.nickname, inline: true },
           { name: 'UUID', value: ban.uuid, inline: true }
         ]);
+        if (ban.gravity == Gravity.HIGH){
+          embed.addFields([
+            { name: 'Gravità', value: '🔴', inline: true }
+          ]);
+        }else if (ban.gravity == Gravity.MEDIUM){
+          embed.addFields([
+            { name: 'Gravità', value: '🟠', inline: true }
+          ]);
+        }else{
+          embed.addFields([
+            { name: 'Gravità', value: '🟡', inline: true }
+          ]);
+        }
+    
       });
     }
 

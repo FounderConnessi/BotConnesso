@@ -9,12 +9,18 @@ datasource db {
 
 model Ban {
   uuid String @id
-  nickname  String? @unique
+  nickname  String @unique
 
   startDate DateTime @default(now())
   endDate DateTime?
+  gravity  Gravity
   reason    String
-  valid Boolean @default(true)
-      
+
   @@map("bans")
+}
+
+enum Gravity {
+  LOW
+  MEDIUM
+  HIGH
 }

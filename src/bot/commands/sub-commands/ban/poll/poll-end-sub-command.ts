@@ -10,7 +10,7 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
   async handler(@Payload() dto: ThreadDto, context: TransformedCommandExecutionContext): Promise<InteractionReplyOptions> {
     const client = context.interaction.client;
     const channel = client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    const thread = channel.threads.cache.find(thread => thread.name === 'Segnalazione su ' + dto.nickname);
+    const thread = channel.threads.cache.find(thread => thread.name === 'Segnalazione su ' + dto.nickname.toLowerCase());
 
     if (thread == undefined) {
       return {
@@ -31,39 +31,48 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
     message = await (message.fetch())
     const embed = new EmbedBuilder()
       .setTitle('Esito sondaggio')
-      .setDescription("La segnalazione di " + dto.nickname + " si è conclusa con: ")
+      .setDescription("La segnalazione su " + dto.nickname + " si è conclusa con: ")
     const votingMembers: string[] = message.guild.roles.resolve(process.env.VOTE_ROLE_ID).members.map((member) => member.id);
 
-    let upVotes: string[]
-    await message.reactions.resolve('👍').users.fetch().then(userList => {
-      upVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
-      embed.addFields({ name: 'A favore', value: (upVotes.length).toString(), inline: true });
+    let greenVotes: string[]
+    await message.reactions.resolve('🟢').users.fetch().then(userList => {
+      greenVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
+      userList.filter(user => !greenVotes.includes(user.username)).forEach(user=> message.reactions.resolve('🟢').users.remove(user.id));
+    });
+    let yellowVotes: string[];
+    await message.reactions.resolve('🟡').users.fetch().then(userList => {
+      yellowVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
+      userList.filter(user => !yellowVotes.includes(user.username)).forEach(user=> message.reactions.resolve('🟡').users.remove(user.id));
+    });
+    let orangeVotes: string[];
+    await message.reactions.resolve('🟠').users.fetch().then(userList => {
+      orangeVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
+      userList.filter(user => !orangeVotes.includes(user.username)).forEach(user=> message.reactions.resolve('🟠').users.remove(user.id));
+    });
+    let redVotes: string[];
+    await message.reactions.resolve('🔴').users.fetch().then(userList => {
+      redVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
+      userList.filter(user => !redVotes.includes(user.username)).forEach(user => message.reactions.resolve('🔴').users.remove(user.id));
     });
 
-    let downVotes: string[];
-    await message.reactions.resolve('👎').users.fetch().then(userList => {
-      downVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
-      embed.addFields({ name: 'Contro', value: (downVotes.length).toString(), inline: true });
-    });
+    const upVotes = new Set(yellowVotes.concat(orangeVotes).concat(redVotes));
+    embed.addFields({ name: 'A favore', value: (upVotes.size).toString(), inline: true });
+    embed.addFields({ name: 'Contro', value: (greenVotes.length).toString(), inline: true });
+    
 
-    if (downVotes.length > upVotes.length) {
+    if (greenVotes.length > upVotes.size) {
       embed.setColor(Colors.Green)
-    } else if (downVotes.length == upVotes.length) {
-      embed.setColor(Colors.Orange)
-    } else {
+    } else if (greenVotes.length == upVotes.size) {
+      embed.setColor(Colors.White)
+    } else if (redVotes.length> upVotes.size-redVotes.length){
       embed.setColor(Colors.Red)
-    }
-
-    if (downVotes.length == 0) {
-      downVotes.push('Nessuno');
-    }
-
-    if (upVotes.length == 0) {
-      upVotes.push('Nessuno');
+    } else if (orangeVotes.length> upVotes.size-orangeVotes.length){
+      embed.setColor(Colors.Orange)
+    } else{
+      embed.setColor(Colors.Yellow)
     }
 
     embed
-      .addFields({ name: '\u200B', value: '\u200B' }, { name: 'Votanti', value: upVotes.join(','), inline: true }, { name: 'Votanti', value: downVotes.join(','), inline: true })
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
       .setTimestamp();
 
@@ -72,9 +81,8 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
         embeds: [embed],
       }),
       message.unpin(),
-      message.reactions.removeAll(),
     ]).then(() => {
-      thread.setArchived(true);
+      setTimeout((() => thread.setArchived(true)), 6000);
     });
 
     return {
