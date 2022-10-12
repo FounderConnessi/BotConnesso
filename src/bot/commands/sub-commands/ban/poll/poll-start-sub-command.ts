@@ -40,14 +40,14 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
       embeds: [embed],
     });
 
-    message = thread.lastMessage;
+    const lastMessage = thread.lastMessage;
 
     Promise.all([
-      message.react('🟢'),
-      message.react('🟡'),
-      message.react('🟠'),
-      message.react('🔴'),
-      message.pin('Sondaggio'),
+      lastMessage.react('🟢'),
+      lastMessage.react('🟡'),
+      lastMessage.react('🟠'),
+      lastMessage.react('🔴'),
+      lastMessage.pin('Sondaggio'),
       thread.setLocked(true),
     ]);
 

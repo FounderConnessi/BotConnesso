@@ -18,7 +18,7 @@ export class UnbanSubCommand implements DiscordTransformedCommand<UnBanDto> {
       where: dto,
     });
 
-    if (!ban || !ban.valid) {
+    if (!ban || ban.endDate != null) {
       return {
         content: "Questo utente non risulta bannato!",
         ephemeral: true
@@ -28,7 +28,6 @@ export class UnbanSubCommand implements DiscordTransformedCommand<UnBanDto> {
     await this.prisma.ban.update({
       where: dto,
       data: {
-        valid: false,
         endDate: new Date()
       }
     }).catch(error => {

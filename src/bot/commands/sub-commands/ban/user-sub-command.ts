@@ -47,7 +47,7 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
           ephemeral: true
         }
       });
-    }else if (ban.valid) {
+    }else if (!ban.endDate) {
       return {
         content: "Questo utente risulta già bannato!",
         ephemeral: true
@@ -64,7 +64,6 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
           gravity: gravityToStr(dto.gravity) as Gravity,
           startDate: new Date(),
           endDate: null,
-          valid: true
         }
       }).catch(error => {
         this.logger.error(error);

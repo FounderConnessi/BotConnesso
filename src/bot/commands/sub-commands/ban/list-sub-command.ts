@@ -11,7 +11,7 @@ export class BanListSubCommand implements DiscordCommand {
   async handler(): Promise<InteractionReplyOptions> {
     const bans = await this.prisma.ban.findMany({
       where: {
-        valid: true
+        endDate: null
       },
       select: {
         uuid: true,
