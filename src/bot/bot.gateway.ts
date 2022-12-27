@@ -31,7 +31,6 @@ export class BotGateway {
     message.delete();
   }
 
-
   /**
    * Elimina i messaggi inviati durante un sondaggio aperto.
    */
@@ -77,7 +76,6 @@ export class BotGateway {
 
   }
 
-
   /**
    * Motifica il nome di un canale dato il suo id e il nuovo nome.
    * @param channelId Identificato del canale
@@ -86,15 +84,17 @@ export class BotGateway {
   changeChannelName(channelId: string, name: string) {
     const channel = this.client.channels.cache.get(channelId) as GuildChannel;
     channel.setName(name);
-    //this.logger.log('Channel name has been updated (' + name + ')');
   }
 
   /**
-   * Task di aggiornamento del contatore degli Utenti Connessi.
+   * Task di aggiornamento del contatore dei Server, Founder e Utenti Connessi.
    */
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async updateUtentiConnessi() {
-    const utentiConnessi = await this.utils.getUtentiConnessi();
-    this.changeChannelName(process.env.CHANNEL_UC_ID, process.env.CHANNEL_UC_NAME.replace('%players%', utentiConnessi.toString()));
+  @Cron('30 */5 * * * *')
+  async updateChannels() {
+    await this.utils.getCounters().then(counters => {
+      this.changeChannelName(process.env.CHANNEL_UC_ID, "Utenti Connessi: " + counters.userCount);
+      this.changeChannelName(process.env.CHANNEL_SC_ID, "Server Connessi: " + counters.serverCount);
+      this.changeChannelName(process.env.CHANNEL_FC_ID, "Founder Connessi: " + counters.founderCount);
+    });
   }
 }

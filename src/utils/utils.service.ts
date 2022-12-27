@@ -8,42 +8,17 @@ export class UtilsService {
     private readonly httpService = new HttpService;
     private readonly logger = new Logger(UtilsService.name);
 
-    /**
-     * 
-     * @param address 
-     * @returns 
-     */
-    async getOnlinePlayers(address: String): Promise<number> {
-        let utenti = 0;
-        await lastValueFrom(this.httpService.get("https://api.mcsrvstat.us/2/" + address))
-            .then(response => {
-                if (response.data.online)
-                    utenti= response.data.players.online;
-            }
-            ).catch(error => {
-                this.logger.warn(error + " (" + address + ")");
-            });
-        return utenti;
+    async getCounters(): Promise<{
+        serverCount: number;
+        founderCount: number;
+        userCount: number;
+    }> {
+        const response = await lastValueFrom(
+          this.httpService.get(process.env.API_ENDPOINT),
+        );
+        return response.data;
     }
 
-    /**
-     * 
-     * @returns 
-     */
-    async getUtentiConnessi(): Promise<number> {
-        let utenti = 0;
-        const serverList = process.env.SERVER.split(';');
-        for (const server of serverList) {
-            utenti += await this.getOnlinePlayers(server);
-        }
-        return utenti;
-    }
-
-    /**
-     * 
-     * @param nickname 
-     * @returns 
-     */
     async getUuid(nickname: string) : Promise<string> {
         let uuid = undefined;
         await lastValueFrom(this.httpService.get("https://api.mojang.com/users/profiles/minecraft/" + nickname))
