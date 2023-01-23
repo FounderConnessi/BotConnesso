@@ -26,8 +26,15 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
     const ban = await this.prisma.ban.findFirst({
       where: {
         OR: [
-          { nickname: dto.nickname.toLowerCase() },
-          { uuid: uuid },
+          {
+            nickname: {
+              equals: dto.nickname,
+              mode: 'insensitive'
+            }
+          },
+          {
+            uuid
+          }
         ],
       },
     });
@@ -35,7 +42,7 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
     if (!ban) {
       await this.prisma.ban.create({
         data: {
-          nickname: dto.nickname.toLowerCase(),
+          nickname: dto.nickname,
           uuid: uuid,
           gravity: gravityToStr(dto.gravity) as Gravity,
           reason: dto.reason
@@ -47,18 +54,18 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
           ephemeral: true
         }
       });
-    }else if (!ban.endDate) {
+    } else if (!ban.endDate) {
       return {
         content: "Questo utente risulta già bannato!",
         ephemeral: true
       }
-    }else{
+    } else {
       await this.prisma.ban.update({
         where: {
-          nickname: dto.nickname.toLowerCase(),
+          uuid
         },
         data: {
-          nickname: dto.nickname.toLowerCase(),
+          nickname: dto.nickname,
           uuid: uuid,
           reason: dto.reason,
           gravity: gravityToStr(dto.gravity) as Gravity,
@@ -85,12 +92,12 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
       ])
       .setTimestamp()
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });
-    
-    if (gravityToStr(dto.gravity) == Gravity.HIGH){
+
+    if (gravityToStr(dto.gravity) == Gravity.HIGH) {
       embed.setColor(Colors.Red);
-    }else if (gravityToStr(dto.gravity) == Gravity.MEDIUM){
+    } else if (gravityToStr(dto.gravity) == Gravity.MEDIUM) {
       embed.setColor(Colors.Orange);
-    }else{
+    } else {
       embed.setColor(Colors.Yellow);
     }
 
