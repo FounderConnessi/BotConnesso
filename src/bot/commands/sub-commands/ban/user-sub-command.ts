@@ -97,12 +97,16 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
     const banListchannel = this.client.channels.cache.get(process.env.CHANNEL_BANLIST_ID) as TextChannel;
     const threadChannel = this.client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
     const thread = threadChannel.threads.cache.find(x => x.name === 'Segnalazione su ' + dto.nickname.toLowerCase());
+
+    if (thread) {
+      embed.addFields({
+        name: ' ',
+        value: `Leggi la discussione: ${hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/" + process.env.GUILD_ID + "/" + thread.id)}`
+      })
+    }
+
     const message = {
       embeds: [embed],
-    }
-    
-    if (thread) {
-      message.embeds[0].setDescription(message.embeds[0].data.description + "\nLeggi la discussione: " + hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/" + process.env.GUILD_ID + "/" + thread.id));
     }
 
     await banListchannel.send(message);
