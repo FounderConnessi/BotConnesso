@@ -1,5 +1,4 @@
 import { DiscordCommand, SubCommand } from "@discord-nestjs/core";
-import { Gravity } from "@prisma/client";
 import { EmbedBuilder, InteractionReplyOptions } from "discord.js";
 import { PrismaService } from "src/prisma/prisma.service";
 
@@ -16,7 +15,6 @@ export class BanListSubCommand implements DiscordCommand {
       select: {
         uuid: true,
         nickname: true,
-        reason: true,
         gravity: true,
       }
     });
@@ -28,29 +26,22 @@ export class BanListSubCommand implements DiscordCommand {
       .setTimestamp()
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });
 
-    if (bans.length==0){
+    if (bans.length==0)
       embed.setDescription("Lista degli utenti bannati al momento vuota.")
-    }else{
+    else {
+      const colorMap = {
+        HIGH: '🔴',
+        MEDIUM: '🟠',
+        LOW: '🟡',
+      };
+
       bans.forEach(ban => {
         embed.addFields([
           { name: 'Nickname', value: ban.nickname, inline: true },
-          { name: 'UUID', value: ban.uuid, inline: true }
+          { name: 'UUID', value: ban.uuid, inline: true },
+          { name: 'Gravità', value: colorMap[ban.gravity], inline: true }
         ]);
-        if (ban.gravity == Gravity.HIGH){
-          embed.addFields([
-            { name: 'Gravità', value: '🔴', inline: true }
-          ]);
-        }else if (ban.gravity == Gravity.MEDIUM){
-          embed.addFields([
-            { name: 'Gravità', value: '🟠', inline: true }
-          ]);
-        }else{
-          embed.addFields([
-            { name: 'Gravità', value: '🟡', inline: true }
-          ]);
-        }
-    
-      });
+      })
     }
 
     return {

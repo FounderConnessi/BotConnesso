@@ -81,7 +81,6 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
       });
     }
 
-
     const embed = new EmbedBuilder()
       .setTitle("Ban Connesso")
       .setDescription("Dopo la votazione è stato deciso di aggiungere alla blacklist: ")
@@ -93,12 +92,13 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
       .setTimestamp()
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });
 
-    if (gravityToStr(dto.gravity) == Gravity.HIGH) {
-      embed.setColor(Colors.Red);
-    } else if (gravityToStr(dto.gravity) == Gravity.MEDIUM) {
-      embed.setColor(Colors.Orange);
-    } else {
-      embed.setColor(Colors.Yellow);
+    switch (gravityToStr(dto.gravity)) {
+      case "HIGH":
+        embed.setColor(Colors.Red);
+      case "MEDIUM":
+        embed.setColor(Colors.Orange);
+      case "LOW":
+        embed.setColor(Colors.Yellow);
     }
 
     const banListchannel = this.client.channels.cache.get(process.env.CHANNEL_BANLIST_ID) as TextChannel;
@@ -108,7 +108,7 @@ export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
     if (thread) {
       embed.addFields({
         name: ' ',
-        value: `Leggi la discussione: ${hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/" + process.env.GUILD_ID + "/" + thread.id)}`
+        value: `Leggi la discussione: ${hyperlink(`Segnalazione su ${dto.nickname}`, `https://discord.com/channels/${process.env.GUILD_ID}/${thread.id}`)}`
       })
     }
 

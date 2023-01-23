@@ -14,7 +14,7 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
 
   async handler(@Payload() dto: PollDto): Promise<InteractionReplyOptions> {
     const channel = this.client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    const thread = channel.threads.cache.find(thread => thread.name === 'Segnalazione su ' + dto.nickname.toLowerCase());
+    const thread = channel.threads.cache.find(thread => thread.name === `Segnalazione su ${dto.nickname.toLowerCase()}`);
 
     if (thread == undefined) {
       return { content: 'Devi prima creare un thread per discutere del ban' };
@@ -22,10 +22,9 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
 
     let message = (await thread.messages.fetchPinned()).last();
 
-
     if (message != undefined) {
       return {
-        content: 'Esiste già un sondaggio per questo utente! ' + hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id),
+        content: `Esiste già un sondaggio aperto per questo utente! \n${hyperlink(`Segnalazione su ${dto.nickname}`, `https://discord.com/channels/${process.env.GUILD_ID}/${thread.id}`)}`,
         ephemeral: true
       };
     }
@@ -60,7 +59,7 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
     embed
       .setTitle('Inizio sondaggio')
       .setColor(0xff7264)
-      .setDescription("E' stato avviato il sondaggio in "+ hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id)+ "\nResterà aperto per 24h, ogni server esprime un voto.")
+      .setDescription(`È stato avviato il sondaggio in ${hyperlink(`Segnalazione su ${dto.nickname}`, `https://discord.com/channels/${process.env.GUILD_ID}/${thread.id}`)}\nResterà aperto per 24h, ogni server esprime un voto.`)
       .setFields()
       .setTimestamp()
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });

@@ -2,7 +2,7 @@ import { Once, InjectDiscordClient, On, UseGuards } from '@discord-nestjs/core'
 import { Injectable, Logger } from '@nestjs/common';
 import { Client, GuildChannel, Message, MessageReaction, User } from 'discord.js';
 import { UtilsService } from 'src/utils/utils.service';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { MessageAfterPollStarted, MessageFromBotGuard, MessagePinnedOrThreadCreated, PollReaction } from './guards';
 @Injectable()
 export class BotGateway {

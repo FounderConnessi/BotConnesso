@@ -10,7 +10,7 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
   async handler(@Payload() dto: ThreadDto, context: TransformedCommandExecutionContext): Promise<InteractionReplyOptions> {
     const client = context.interaction.client;
     const channel = client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    const thread = channel.threads.cache.find(thread => thread.name === 'Segnalazione su ' + dto.nickname.toLowerCase());
+    const thread = channel.threads.cache.find(thread => thread.name === `Segnalazione su ${dto.nickname.toLowerCase()}`);
 
     if (thread == undefined) {
       return {
@@ -27,75 +27,64 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
         ephemeral: true
       };
     }
+    
+    await context.interaction.deferReply();
 
     message = await (message.fetch())
     const embed = new EmbedBuilder()
       .setTitle('Esito sondaggio')
-      .setDescription("La segnalazione su " + dto.nickname + " si è conclusa con: ")
+      .setDescription(`La segnalazione si è conclusa con: `)
+      .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
+      .setTimestamp();
     const votingMembers: string[] = message.guild.roles.resolve(process.env.VOTE_ROLE_ID).members.map((member) => member.id);
+    const votes = { '🟢': 0, '🟡': 0, '🟠': 0, '🔴': 0 }
 
-    let greenVotes: string[]
-    await message.reactions.resolve('🟢').users.fetch().then(userList => {
-      greenVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
-      userList.filter(user => !greenVotes.includes(user.username)).forEach(user=> message.reactions.resolve('🟢').users.remove(user.id));
-    });
-    let yellowVotes: string[];
-    await message.reactions.resolve('🟡').users.fetch().then(userList => {
-      yellowVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
-      userList.filter(user => !yellowVotes.includes(user.username)).forEach(user=> message.reactions.resolve('🟡').users.remove(user.id));
-    });
-    let orangeVotes: string[];
-    await message.reactions.resolve('🟠').users.fetch().then(userList => {
-      orangeVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
-      userList.filter(user => !orangeVotes.includes(user.username)).forEach(user=> message.reactions.resolve('🟠').users.remove(user.id));
-    });
-    let redVotes: string[];
-    await message.reactions.resolve('🔴').users.fetch().then(userList => {
-      redVotes = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
-      userList.filter(user => !redVotes.includes(user.username)).forEach(user => message.reactions.resolve('🔴').users.remove(user.id));
-    });
+    for (const reaction of ['🟢', '🟡', '🟠', '🔴']) {
+      let userList = await message.reactions.resolve(reaction).users.fetch();
+      const votesUsername = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
+      votes[reaction] = votesUsername.length;
+      const removePromises = userList.filter(user => !votesUsername.includes(user.username)).map(async user =>
+        await message.reactions.resolve(reaction).users.remove(user.id));
+      await Promise.all(removePromises);
+    }
 
-    const upVotes = new Set(yellowVotes.concat(orangeVotes).concat(redVotes));
-    embed.addFields({ name: 'A favore', value: (upVotes.size).toString(), inline: true });
-    embed.addFields({ name: 'Contro', value: (greenVotes.length).toString(), inline: true });
-    
+    const blackListVotes = votes['🔴'] + votes['🟠'] + votes['🟡'];
 
-    if (greenVotes.length > upVotes.size) {
+    embed.addFields([
+      { name: 'Contrari alla blacklist', value: `${votes['🟢']}`, inline: true },
+      { name: 'Favorevoli alla blacklist', value: `${blackListVotes}`, inline: true }
+    ]);
+
+
+    if (votes['🟢'] > blackListVotes) {
       embed.setColor(Colors.Green)
-    } else if (greenVotes.length == upVotes.size) {
+    } else if (votes['🟢'] == blackListVotes) {
       embed.setColor(Colors.White)
-    } else if (redVotes.length> upVotes.size-redVotes.length){
+    } else if (votes['🔴'] > (blackListVotes - votes['🔴'])) {
       embed.setColor(Colors.Red)
-    } else if (orangeVotes.length> upVotes.size-orangeVotes.length){
+    } else if (votes['🟠'] > (blackListVotes - votes['🟠'])) {
       embed.setColor(Colors.Orange)
-    } else{
+    } else {
       embed.setColor(Colors.Yellow)
     }
 
-    embed
-      .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
-      .setTimestamp();
-
-    Promise.all([
-      message.edit({
-        embeds: [embed],
-      }),
-      message.unpin(),
-    ]).then(() => {
-      setTimeout((() => thread.setArchived(true)), 6000);
+    await message.edit({
+      embeds: [embed],
     });
+    message.unpin(),
+    thread.setArchived(true)
 
-    return {
+    await context.interaction.editReply({
       embeds:
         [
           new EmbedBuilder()
             .setTitle('Fine sondaggio')
             .setColor(0xff7264)
-            .setDescription("Si è concluso il sondaggio in " + hyperlink('Segnalazione su ' + dto.nickname, "https://discord.com/channels/"+ process.env.GUILD_ID +"/"+ thread.id))
+            .setDescription(`Si è concluso il sondaggio in ${hyperlink(`Segnalazione su ${dto.nickname}`, `https://discord.com/channels/${process.env.GUILD_ID}/${thread.id}`)}`)
             .setFields()
             .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
             .setTimestamp()
-        ]
-    };
+        ],
+    });
   }
 }
