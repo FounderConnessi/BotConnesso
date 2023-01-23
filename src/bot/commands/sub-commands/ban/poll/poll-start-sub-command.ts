@@ -33,7 +33,13 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
     const embed = new EmbedBuilder()
       .setTitle('Ban Connesso')
       .setColor(0xff7264)
-      .setDescription("Sei a favore del ban di " + dto.nickname + "?")
+      .setDescription(`Sei a favore del ban di **${dto.nickname}**?  
+
+                      **COME VOTARE:**
+                      🟢 Contrario alla blacklist
+                      🟡 Blacklist gravità bassa
+                      🟠 Blacklist gravità media
+                      🔴 Blacklist gravità alta`)
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });
 
     await thread.send({
