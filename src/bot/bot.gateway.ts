@@ -13,7 +13,7 @@ export class BotGateway {
     @InjectDiscordClient()
     private readonly client: Client,
     private readonly utils: UtilsService
-  ) {}
+  ) { }
 
   @Once('ready')
   async onReady() {
@@ -49,31 +49,28 @@ export class BotGateway {
     const isReferent = reaction.message.guild.members.cache.get(user.id).roles.cache.has(process.env.VOTE_ROLE_ID);
     if (!isReferent) {
       reaction.users.remove(user.id);
-    } else {
-      let message = reaction.message;
-      if (reaction.partial)
-        message = await reaction.message.fetch();
-      
-      const userReactions = (
-        await Promise.all(
-          message.reactions.cache.map(async (reactionElement) => {
-            let users = reactionElement.users.cache;
-            if (users.size==1){
-              users = await reactionElement.users.fetch();
-            }
-            const keep = users.has(user.id) && reactionElement.emoji.name!=reaction.emoji.name;
-            return { reactionElement, keep };
-          })
-        )
-      )
-        .filter((data) => data.keep)
-        .map((data) => data.reactionElement);
-
-      for (const reaction of userReactions.values()) {
-        reaction.users.remove(user.id);
-      }
+      return;
     }
+    const message = reaction.partial ? await reaction.message.fetch() : reaction.message;
 
+    const userReactions = (
+      await Promise.all(
+        message.reactions.cache.map(async (reactionElement) => {
+          let users = reactionElement.users.cache;
+          if (users.size == 1) {
+            users = await reactionElement.users.fetch();
+          }
+          const keep = users.has(user.id) && reactionElement.emoji.name != reaction.emoji.name;
+          return { reactionElement, keep };
+        })
+      )
+    )
+      .filter((data) => data.keep)
+      .map((data) => data.reactionElement);
+
+    for (const reaction of userReactions.values()) {
+      reaction.users.remove(user.id);
+    }
   }
 
   /**
@@ -91,7 +88,7 @@ export class BotGateway {
    */
   @Cron('30 */5 * * * *')
   async updateChannels() {
-    await this.utils.getCounters().then(counters => {
+    this.utils.getCounters().then(counters => {
       this.changeChannelName(process.env.CHANNEL_UC_ID, "Utenti Connessi: " + counters.userCount);
       this.changeChannelName(process.env.CHANNEL_SC_ID, "Server Connessi: " + counters.serverCount);
       this.changeChannelName(process.env.CHANNEL_FC_ID, "Founder Connessi: " + counters.founderCount);

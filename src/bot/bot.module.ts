@@ -1,5 +1,6 @@
 import { DiscordModule } from '@discord-nestjs/core';
 import { Module } from '@nestjs/common';
+import { BanModule } from 'src/ban/ban.module';
 import { UtilsModule } from 'src/utils/utils.module';
 
 import { BotGateway } from './bot.gateway';
@@ -14,7 +15,8 @@ import { UnbanSubCommand } from './commands/sub-commands/unban/unban-sub-command
 @Module({
   imports: [
     DiscordModule.forFeature(),
-    UtilsModule
+    UtilsModule,
+    BanModule
   ],
   providers: [
     BotGateway,

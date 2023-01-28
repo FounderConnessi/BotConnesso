@@ -1,48 +1,42 @@
 import { TransformPipe } from '@discord-nestjs/common';
 import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, UsePipes } from '@discord-nestjs/core';
-import { Client, EmbedBuilder, hyperlink, InteractionReplyOptions, TextChannel } from 'discord.js';
+import { Client, EmbedBuilder, InteractionReplyOptions } from 'discord.js';
 import { PollDto } from 'src/bot/dto';
+import { addDiscussionButton, addPollButton, getChannelAndThreadDiscussion } from 'src/utils/utils';
 
 @UsePipes(TransformPipe)
 @SubCommand({ name: 'poll-start', description: 'Avvia la votazione per la blacklist' })
 export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto> {
-
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
   ) { }
 
   async handler(@Payload() dto: PollDto): Promise<InteractionReplyOptions> {
-    const channel = this.client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    const thread = channel.threads.cache.find(thread => thread.name === `Segnalazione su ${dto.nickname.toLowerCase()}`);
+    const { thread } = getChannelAndThreadDiscussion(dto.nickname, this.client);
 
-    if (thread == undefined) {
-      return { content: 'Devi prima creare un thread per discutere del ban' };
-    }
-
-    let message = (await thread.messages.fetchPinned()).last();
-
-    if (message != undefined) {
-      return {
-        content: `Esiste già un sondaggio aperto per questo utente! \n${hyperlink(`Segnalazione su ${dto.nickname}`, `https://discord.com/channels/${process.env.GUILD_ID}/${thread.id}`)}`,
+    if (!thread)
+      return { 
+        content: 'Devi prima creare un thread per discutere del ban',
         ephemeral: true
       };
-    }
 
-    const embed = new EmbedBuilder()
-      .setTitle('Ban Connesso')
-      .setColor(0xff7264)
-      .setDescription(`Sei a favore del ban di **${dto.nickname}**?  
+    let pollMessage = (await thread.messages.fetchPinned()).last();
 
-                      **COME VOTARE:**
-                      🟢 Contrario alla blacklist
-                      🟡 Blacklist gravità bassa
-                      🟠 Blacklist gravità media
-                      🔴 Blacklist gravità alta`)
-      .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });
+    if (pollMessage)
+      return addPollButton(pollMessage.url, {
+          content: "Esiste già un sondaggio aperto per questo utente!",
+          ephemeral: true
+      });
 
     await thread.send({
-      embeds: [embed],
+      embeds: [
+        new EmbedBuilder()
+        .setTitle('Ban Connesso')
+        .setColor(0xff7264)
+        .setDescription(`Sei a favore del ban di **${dto.nickname}**?\n\n**COME VOTARE:**\n🟢 Contrario alla blacklist\n🟡 Blacklist gravità bassa\n🟠 Blacklist gravità media\n🔴 Blacklist gravità alta`)
+        .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
+      ]
     });
 
     const lastMessage = thread.lastMessage;
@@ -56,17 +50,15 @@ export class BanPollStartSubCommand implements DiscordTransformedCommand<PollDto
       thread.setLocked(true),
     ]);
 
-    embed
-      .setTitle('Inizio sondaggio')
-      .setColor(0xff7264)
-      .setDescription(`È stato avviato il sondaggio in ${hyperlink(`Segnalazione su ${dto.nickname}`, `https://discord.com/channels/${process.env.GUILD_ID}/${thread.id}`)}\nResterà aperto per 24h, ogni server esprime un voto.`)
-      .setFields()
-      .setTimestamp()
-      .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' });
-
-    return {
-      embeds: [embed]
-    };
-
+    return addPollButton(lastMessage.url, {
+      embeds: [
+        new EmbedBuilder()
+        .setTitle('Inizio sondaggio')
+        .setColor(0xff7264)
+        .setDescription(`È stato avviato il sondaggio per la segnalazione su **${dto.nickname}**\nResterà aperto per 24h, ogni server esprime un voto.`)
+        .setTimestamp()
+        .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
+      ]
+    });
   }
 }
