@@ -8,15 +8,23 @@ datasource db {
 }
 
 model Ban {
-  uuid String @id
-  nickname  String @unique
+  uuid     String @id
+  nickname String @unique
 
-  startDate DateTime @default(now())
-  endDate DateTime?
-  gravity  Gravity
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+  gravity   Gravity
   reason    String
 
   @@map("bans")
+}
+
+model Founder {
+  id       String  @id
+  username String  @unique
+  isReferent Boolean @default(false)
+
+  @@map("discord_founders")
 }
 
 enum Gravity {

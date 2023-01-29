@@ -4,6 +4,7 @@ import { Client, GuildChannel, Message, MessageReaction, User } from 'discord.js
 import { UtilsService } from 'src/utils/utils.service';
 import { Cron } from '@nestjs/schedule';
 import { MessageAfterPollStarted, MessageFromBotGuard, MessagePinnedOrThreadCreated, PollReaction } from './guards';
+import { FoundersService } from 'src/founders/founders.service';
 @Injectable()
 export class BotGateway {
 
@@ -12,7 +13,8 @@ export class BotGateway {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
-    private readonly utils: UtilsService
+    private readonly utils: UtilsService,
+    private readonly founders: FoundersService
   ) { }
 
   @Once('ready')
@@ -46,31 +48,12 @@ export class BotGateway {
   @UseGuards(PollReaction)
   @On('messageReactionAdd')
   async OnMessageReact(reaction: MessageReaction, user: User) {
-    const isReferent = reaction.message.guild.members.cache.get(user.id).roles.cache.has(process.env.VOTE_ROLE_ID);
-    if (!isReferent) {
-      reaction.users.remove(user.id);
-      return;
-    }
-    const message = reaction.partial ? await reaction.message.fetch() : reaction.message;
-
-    const userReactions = (
-      await Promise.all(
-        message.reactions.cache.map(async (reactionElement) => {
-          let users = reactionElement.users.cache;
-          if (users.size == 1) {
-            users = await reactionElement.users.fetch();
-          }
-          const keep = users.has(user.id) && reactionElement.emoji.name != reaction.emoji.name;
-          return { reactionElement, keep };
-        })
-      )
-    )
-      .filter((data) => data.keep)
-      .map((data) => data.reactionElement);
-
-    for (const reaction of userReactions.values()) {
-      reaction.users.remove(user.id);
-    }
+    this.founders.isReferent(user.id).then(
+      isReferent => {
+        if (!isReferent)
+          reaction.users.remove(user.id);
+      }
+    );
   }
 
   /**

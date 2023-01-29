@@ -2,19 +2,21 @@ import { TransformPipe } from '@discord-nestjs/common';
 import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, TransformedCommandExecutionContext, UsePipes } from '@discord-nestjs/core';
 import { InteractionReplyOptions, EmbedBuilder, Colors, Client } from 'discord.js';
 import { ThreadDto } from 'src/bot/dto';
-import { addDiscussionButton, addPollButton, getChannelAndThreadDiscussion } from 'src/utils/utils';
+import { FoundersService } from 'src/founders/founders.service';
+import { addPollButton, getChannelAndThreadDiscussion } from 'src/utils/utils';
 
 @UsePipes(TransformPipe)
 @SubCommand({ name: 'poll-end', description: 'Termina la votazione per la blacklist' })
-export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto> {
+export class BanPollEndCommand implements DiscordTransformedCommand<ThreadDto> {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
+    private readonly founders: FoundersService
   ) { }
 
   async handler(@Payload() dto: ThreadDto, context: TransformedCommandExecutionContext): Promise<InteractionReplyOptions> {
     const { thread } = getChannelAndThreadDiscussion(dto.nickname, this.client);
-    
+
     if (!thread)
       return {
         content: 'Devi prima creare un thread di discussione.',
@@ -33,16 +35,32 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
 
     pollMessage = await (pollMessage.fetch());
 
-    const votingMembers: string[] = pollMessage.guild.roles.resolve(process.env.VOTE_ROLE_ID).members.map((member) => member.id);
     const votes = { '🟢': 0, '🟡': 0, '🟠': 0, '🔴': 0 }
+    const referentVotes: { [key: string]: number } = {};
 
-    for (const reaction of ['🟢', '🟡', '🟠', '🔴']) {
-      let userList = await pollMessage.reactions.resolve(reaction).users.fetch();
-      const votesUsername = userList.filter(user => votingMembers.includes(user.id)).map((user) => user.username);
-      votes[reaction] = votesUsername.length;
-      const removePromises = userList.filter(user => !votesUsername.includes(user.username)).map(async user =>
-        await pollMessage.reactions.resolve(reaction).users.remove(user.id));
-      await Promise.all(removePromises);
+    for (const emoji of ['🟢', '🟡', '🟠', '🔴']) {
+      const reaction = pollMessage.reactions.resolve(emoji);
+      if (!reaction)
+        continue;
+      const foundersId = (await reaction.users.fetch()).map(user => user.id);
+      let lawfulVotes = foundersId.length;
+      for (const id of foundersId) {
+        if (!await this.founders.isReferent(id)) {
+          await pollMessage.reactions.resolve(emoji).users.remove(id);
+          lawfulVotes--;
+        } else
+          this.addReferentVote(id, referentVotes);
+      }
+      votes[emoji] = lawfulVotes;
+    }
+
+    const duplicatedVotes = this.searchDuplicatedVotes(referentVotes);
+
+    if (duplicatedVotes.length > 0) {
+      await context.interaction.editReply({
+        content: `Ho riscontrato i seguenti voti duplicati: ${this.mentionUsers(duplicatedVotes)}`,
+      });
+      return;
     }
 
     const blackListVotes = votes['🔴'] + votes['🟠'] + votes['🟡'];
@@ -56,22 +74,16 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
             { name: 'Contrari alla blacklist', value: `${votes['🟢']}`, inline: true },
             { name: 'Favorevoli alla blacklist', value: `${blackListVotes}`, inline: true }
           ])
+          .setColor(0xff7264)
           .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
       ]
-    }
+    };
     const embed = message.embeds[0];
 
-    if (votes['🟢'] > blackListVotes) {
+    if (votes['🟢'] > blackListVotes)
       embed.setColor(Colors.Green)
-    } else if (votes['🟢'] == blackListVotes) {
+    else if (votes['🟢'] == blackListVotes)
       embed.setColor(Colors.White)
-    } else if (votes['🔴'] > (blackListVotes - votes['🔴'])) {
-      embed.setColor(Colors.Red)
-    } else if (votes['🟠'] > (blackListVotes - votes['🟠'])) {
-      embed.setColor(Colors.Orange)
-    } else {
-      embed.setColor(Colors.Yellow)
-    }
 
     await pollMessage.edit(message);
     pollMessage.unpin();
@@ -79,11 +91,26 @@ export class BanPollEndSubCommand implements DiscordTransformedCommand<ThreadDto
 
     embed
       .setTitle('Fine sondaggio')
-      .setDescription(`Si è concluso il sondaggio su **${dto.nickname}**`)
+      .setDescription(`Si è concluso il sondaggio su **${dto.nickname}**.`)
       .setFields()
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
       .setTimestamp();
 
     await context.interaction.editReply(addPollButton(pollMessage.url, message));
+  }
+
+  addReferentVote(username: string, data: { [key: string]: number }) {
+    if (data[username] == undefined)
+      data[username] = 1;
+    else
+      data[username]++;
+  }
+
+  searchDuplicatedVotes(data: { [key: string]: number }) {
+    return Object.keys(data).filter(key => data[key] > 1);
+  }
+
+  mentionUsers(ids: string[]) {
+    return ids.map(id => `<@${id}>`).join(' ');
   }
 }

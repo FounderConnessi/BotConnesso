@@ -6,7 +6,7 @@ import { UnBanDto } from 'src/bot/dto';
 
 @UsePipes(TransformPipe)
 @SubCommand({ name: 'unban', description: 'Rimuovi un utente dalla blacklist' })
-export class UnbanSubCommand implements DiscordTransformedCommand<UnBanDto> {
+export class UnbanUserCommand implements DiscordTransformedCommand<UnBanDto> {
 
   constructor(private readonly ban: BanService) { }
 

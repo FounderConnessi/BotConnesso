@@ -3,7 +3,7 @@ import { EmbedBuilder, InteractionReplyOptions } from "discord.js";
 import { BanService } from "src/ban/ban.service";
 
 @SubCommand({ name: 'list', description: 'Consulta la lista degli utenti nella blacklist' })
-export class BanListSubCommand implements DiscordCommand {
+export class BanListCommand implements DiscordCommand {
 
   constructor(private readonly ban: BanService) { }
 

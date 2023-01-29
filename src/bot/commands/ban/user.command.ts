@@ -8,7 +8,7 @@ import { addDiscussionButton } from 'src/utils/utils';
 
 @UsePipes(TransformPipe)
 @SubCommand({ name: 'user', description: 'Inserisci un utente nella blacklist' })
-export class BanUserSubCommand implements DiscordTransformedCommand<BanDto> {
+export class BanUserCommand implements DiscordTransformedCommand<BanDto> {
 
   constructor(
     @InjectDiscordClient()

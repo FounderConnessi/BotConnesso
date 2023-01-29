@@ -6,7 +6,7 @@ import { addDiscussionButton, getChannelAndThreadDiscussion } from 'src/utils/ut
 
 @UsePipes(TransformPipe)
 @SubCommand({ name: 'thread', description: 'Avvia la discussione per segnalare una persona' })
-export class BanThreadSubCommand implements DiscordTransformedCommand<ThreadDto> {
+export class BanThreadCommand implements DiscordTransformedCommand<ThreadDto> {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
