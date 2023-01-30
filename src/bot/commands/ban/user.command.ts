@@ -2,7 +2,7 @@ import { TransformPipe } from '@discord-nestjs/common';
 import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, UsePipes } from '@discord-nestjs/core';
 import { InteractionReplyOptions, EmbedBuilder, TextChannel, Client, Colors } from 'discord.js';
 import { BanService } from 'src/ban/ban.service';
-import { gravityToStr, translateGravity } from 'src/bot/definitions/gravity';
+import { Gravity, translateGravity } from 'src/bot/definitions/gravity';
 import { BanDto } from 'src/bot/dto';
 import { addDiscussionButton } from 'src/utils/utils';
 
@@ -34,7 +34,7 @@ export class BanUserCommand implements DiscordTransformedCommand<BanDto> {
       embeds: [
         new EmbedBuilder()
           .setTitle("Ban Connesso")
-          .setDescription(`Il giocatore **${dto.nickname}** è stato aggiunto alla blacklist con gravità **${translateGravity(ban.data.gravity)}**.`)
+          .setDescription(`Il giocatore **${dto.nickname}** è stato aggiunto alla blacklist con gravità **${translateGravity(dto.gravity)}**.`)
           .addFields([{ name: 'Motivo', value: dto.reason }])
           .setTimestamp()
           .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
@@ -42,13 +42,16 @@ export class BanUserCommand implements DiscordTransformedCommand<BanDto> {
     });
     const embed = message.embeds[0];
 
-    switch (gravityToStr(dto.gravity)) {
-      case "HIGH":
+    switch (dto.gravity) {
+      case Gravity.HIGH:
         embed.setColor(Colors.Red);
-      case "MEDIUM":
+        break;
+      case Gravity.MEDIUM:
         embed.setColor(Colors.Orange);
-      case "LOW":
+        break;
+      case Gravity.LOW:
         embed.setColor(Colors.Yellow);
+        break;
     }
 
     const banListchannel = this.client.channels.cache.get(process.env.CHANNEL_BANLIST_ID) as TextChannel;

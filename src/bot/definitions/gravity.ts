@@ -8,13 +8,13 @@ export function gravityToStr(gravity: Gravity) {
     return Gravity[gravity];
 }
 
-export function translateGravity(gravity) : string {
+export function translateGravity(gravity: Gravity) : string {
     switch (gravity) {
-        case "HIGH":
+        case Gravity.HIGH:
             return "alta";
-        case "MEDIUM":
+        case Gravity.MEDIUM:
             return "media";
-        case "LOW":
+        case Gravity.LOW:
             return "bassa";
     }
 }

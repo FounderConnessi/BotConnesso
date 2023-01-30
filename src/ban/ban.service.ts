@@ -88,7 +88,12 @@ export class BanService {
 
   async unBanUser(dto: UnBanDto): Promise<{ completed: boolean; error: boolean; data: any}> {
     const ban = await this.prisma.ban.findFirst({
-      where: dto,
+      where: {
+        nickname: {
+          equals: dto.nickname,
+          mode: 'insensitive'
+        }
+      }
     });
     let error = false;
 
