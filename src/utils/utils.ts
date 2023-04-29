@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, TextChannel, Thre
 
 export function addDiscussionButton(client: Client, nickname: string, label: string, message: any) {
     const threadChannel = client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    const thread = threadChannel.threads.cache.find(x => x.name === 'Segnalazione su ' + nickname.toLowerCase());
+    const thread = threadChannel.threads.cache.find(x => x.name.toLowerCase() === `segnalazione su ${nickname.toLowerCase()}`);
 
     if (thread) {
         message.components = [
@@ -33,6 +33,6 @@ export function addPollButton(url: string, message: any) {
 
 export function getChannelAndThreadDiscussion(nickname: string, client: Client): { channel: TextChannel, thread: ThreadChannel } {
     const channel = client.channels.cache.get(process.env.CHANNEL_THREAD_ID) as TextChannel;
-    const thread = channel.threads.cache.find(x => x.name === `Segnalazione su ${nickname.toLowerCase()}`) as ThreadChannel;
+    const thread = channel.threads.cache.find(x => x.name.toLowerCase() === `segnalazione su ${nickname.toLowerCase()}`) as ThreadChannel;
     return { channel, thread };
 }

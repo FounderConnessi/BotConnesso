@@ -22,7 +22,7 @@ export class BanThreadCommand implements DiscordTransformedCommand<ThreadDto> {
       });
 
     thread = await channel.threads.create({
-      name: `Segnalazione su ${dto.nickname.toLowerCase()}`,
+      name: `Segnalazione su ${dto.nickname}`,
       autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
       reason: `Segnalazione su ${dto.nickname}`,
     });
@@ -36,7 +36,7 @@ export class BanThreadCommand implements DiscordTransformedCommand<ThreadDto> {
         new EmbedBuilder()
           .setTitle("Segnalazione aperta")
           .setAuthor({ name: user.username, iconURL: user.avatarURL() })
-          .setDescription(`E' stata avviata una segnalazione su **${dto.nickname}**\n`)
+          .setDescription(`È stata avviata una segnalazione su **${dto.nickname}**\n`)
           .setColor(0xff7264)
           .setTimestamp()
           .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
