@@ -1,16 +1,16 @@
-import { TransformPipe } from '@discord-nestjs/common';
-import { DiscordTransformedCommand, Payload, SubCommand, UsePipes } from '@discord-nestjs/core';
+import { Handler, IA, SubCommand } from "@discord-nestjs/core";
 import { Colors, EmbedBuilder, InteractionReplyOptions } from 'discord.js';
 import { BanService } from 'src/ban/ban.service';
 import { UnBanDto } from 'src/bot/dto';
+import { SlashCommandPipe } from "@discord-nestjs/common";
 
-@UsePipes(TransformPipe)
 @SubCommand({ name: 'unban', description: 'Rimuovi un utente dalla blacklist' })
-export class UnbanUserCommand implements DiscordTransformedCommand<UnBanDto> {
+export class UnbanUserCommand {
 
   constructor(private readonly ban: BanService) { }
 
-  async handler(@Payload() dto: UnBanDto): Promise<InteractionReplyOptions> {
+  @Handler()
+  async onCommand(@IA(SlashCommandPipe) dto: UnBanDto): Promise<InteractionReplyOptions> {
     const ban = await this.ban.unBanUser(dto);
 
     if (ban.error)

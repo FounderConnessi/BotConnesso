@@ -1,50 +1,18 @@
-import { DiscordCommand, SubCommand } from "@discord-nestjs/core";
+import { Handler, SubCommand } from "@discord-nestjs/core";
 import { EmbedBuilder, InteractionReplyOptions } from "discord.js";
-import { BanService } from "src/ban/ban.service";
 
 @SubCommand({ name: 'list', description: 'Consulta la lista degli utenti nella blacklist' })
-export class BanListCommand implements DiscordCommand {
+export class BanListCommand {
 
-  constructor(private readonly ban: BanService) { }
-
-  async handler(): Promise<InteractionReplyOptions> {
-    const bans = await this.ban.getBannedUsers();
-    const message = {
-      embeds: [
-        new EmbedBuilder()
-          .setTitle('Ban Connesso')
-          .setDescription("Lista degli utenti bannati:")
-          .setColor(0xff7264)
-          .setTimestamp()
-          .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
-      ],
+  @Handler()
+  async onCommand(): Promise<InteractionReplyOptions> {
+    return {
+      content: '⠀\n' +
+          '<:FounderConnessi:1063045748586975302> **LISTA UTENTI BLACKLISTATI**\n' +
+          'Scopri sul sito la lista dei giocatori blacklistati dai server di FounderConnessi,\n' +
+          'il motivo della segnalazione e la gravità scelta dalla maggioranza dei founder. \n' +
+          '⠀',
       ephemeral: true
     };
-    const embed = message.embeds[0];
-
-    if (bans.length == 0)
-      embed.setDescription("Lista degli utenti bannati al momento vuota.")
-    else {
-      const colorMap = {
-        HIGH: '🔴',
-        MEDIUM: '🟠',
-        LOW: '🟡',
-      };
-
-      bans.forEach(ban => {
-        const date = ban.startDate.toLocaleDateString('it-IT', {
-          day: '2-digit',
-          month: '2-digit',
-          year: '2-digit'
-        });
-        embed.addFields([
-          { name: 'Data', value: `${date}`, inline: true },
-          { name: 'Nickname', value: ban.nickname, inline: true },
-          { name: 'Gravità', value: colorMap[ban.gravity], inline: true }
-        ]);
-      });
-    }
-
-    return message;
   }
 }

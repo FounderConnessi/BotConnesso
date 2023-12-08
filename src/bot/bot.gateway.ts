@@ -1,5 +1,5 @@
-import { Once, InjectDiscordClient, On, UseGuards } from '@discord-nestjs/core'
-import { Injectable, Logger } from '@nestjs/common';
+import { Once, InjectDiscordClient, On } from '@discord-nestjs/core'
+import { Injectable, Logger, UseGuards } from "@nestjs/common";
 import { Client, GuildChannel, Message, MessageReaction, User } from 'discord.js';
 import { UtilsService } from 'src/utils/utils.service';
 import { Cron } from '@nestjs/schedule';

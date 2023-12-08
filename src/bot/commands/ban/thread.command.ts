@@ -1,18 +1,48 @@
-import { TransformPipe } from '@discord-nestjs/common';
-import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, TransformedCommandExecutionContext, UsePipes } from '@discord-nestjs/core';
-import { Client, EmbedBuilder, InteractionReplyOptions, roleMention, ThreadAutoArchiveDuration } from 'discord.js';
-import { ThreadDto } from 'src/bot/dto';
-import { addDiscussionButton, getChannelAndThreadDiscussion } from 'src/utils/utils';
+import { Handler, IA, InjectDiscordClient, SubCommand } from "@discord-nestjs/core";
+import {
+  Client,
+  CommandInteraction,
+  EmbedBuilder,
+  InteractionReplyOptions,
+  roleMention,
+  ThreadAutoArchiveDuration
+} from "discord.js";
+import { ThreadDto } from "src/bot/dto";
+import { addDiscussionButton, getChannelAndThreadDiscussion } from "src/utils/utils";
+import * as process from "process";
+import { SlashCommandPipe } from "@discord-nestjs/common";
+import { UtilsService } from "../../../utils/utils.service";
 
-@UsePipes(TransformPipe)
-@SubCommand({ name: 'thread', description: 'Avvia la discussione per segnalare una persona' })
-export class BanThreadCommand implements DiscordTransformedCommand<ThreadDto> {
+@SubCommand({ name: "thread", description: "Avvia la discussione per segnalare una persona" })
+export class BanThreadCommand {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
-  ) { }
+    private readonly utils: UtilsService
+  ) {
+  }
 
-  async handler(@Payload() dto: ThreadDto, context: TransformedCommandExecutionContext): Promise<InteractionReplyOptions> {
+  @Handler()
+  async onCommand(@IA(SlashCommandPipe) dto: ThreadDto, @IA() interaction: CommandInteraction): Promise<InteractionReplyOptions> {
+    const { user } = interaction;
+    const member = interaction.guild.members.cache.get(user.id);
+
+    if (!member.roles.cache.some(role => role.id === process.env.BAN_ROLE_ID)) {
+      return {
+        content: '⠀\n' +
+          '<a:2333verifyred:1063075026418544680> **ERRORE: INSTALLA LA BLACKLIST**\n' +
+          'Per poter aprire una segnalazione su un giocatore e utilizzare le funzionalità\n' +
+          'della blacklist di FounderConnessi, devi prima installarla sul tuo server.\n' +
+          '\n' +
+          '<a:7972discordoff:1063075118881964123>  Scarica il plugin dal sito oppure usa le API pubbliche\n' +
+          '<a:7972discordoff:1063075118881964123> Attiva la blacklist nella Lobby oppure nel Proxy\n' +
+          '<a:7972discordoff:1063075118881964123> Configura il plugin con il filtro e il nome del server\n' +
+          '<a:7972discordoff:1063075118881964123> Attendi che un Amministratore ti dia il ruolo\n' +
+          '⠀',
+        ephemeral: true
+      };
+    }
+
     let { channel, thread } = getChannelAndThreadDiscussion(dto.nickname, this.client);
 
     if (thread)
@@ -24,13 +54,12 @@ export class BanThreadCommand implements DiscordTransformedCommand<ThreadDto> {
     thread = await channel.threads.create({
       name: `Segnalazione su ${dto.nickname}`,
       autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-      reason: `Segnalazione su ${dto.nickname}`,
+      reason: `Segnalazione su ${dto.nickname}`
     });
     thread.send({
       content: `Discuti la segnalazione ${roleMention(process.env.FC_ROLE_ID)}`
     });
 
-    const user = context.interaction.user;
     return addDiscussionButton(this.client, dto.nickname, "Partecipa alla discussione", {
       embeds: [
         new EmbedBuilder()
@@ -39,7 +68,7 @@ export class BanThreadCommand implements DiscordTransformedCommand<ThreadDto> {
           .setDescription(`È stata avviata una segnalazione su **${dto.nickname}**\n`)
           .setColor(0xff7264)
           .setTimestamp()
-          .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
+          .setFooter({ text: "FounderConnessi", iconURL: "https://i.imgur.com/EayOzNt.png" })
       ]
     });
   }

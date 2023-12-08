@@ -1,18 +1,18 @@
-import { TransformPipe } from '@discord-nestjs/common';
-import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, TransformedCommandExecutionContext, UsePipes } from '@discord-nestjs/core';
-import { Client, EmbedBuilder, InteractionReplyOptions } from 'discord.js';
+import { Handler, IA, InjectDiscordClient, SubCommand } from "@discord-nestjs/core";
+import { Client, CommandInteraction, EmbedBuilder, InteractionReplyOptions } from "discord.js";
 import { PollDto } from 'src/bot/dto';
 import { addPollButton, getChannelAndThreadDiscussion } from 'src/utils/utils';
+import { SlashCommandPipe } from "@discord-nestjs/common";
 
-@UsePipes(TransformPipe)
 @SubCommand({ name: 'poll-start', description: 'Avvia la votazione per la blacklist' })
-export class BanPollStartCommand implements DiscordTransformedCommand<PollDto> {
+export class BanPollStartCommand {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
   ) { }
 
-  async handler(@Payload() dto: PollDto, context: TransformedCommandExecutionContext): Promise<InteractionReplyOptions> {
+  @Handler()
+  async onCommand(@IA(SlashCommandPipe) dto: PollDto, @IA() interaction: CommandInteraction): Promise<InteractionReplyOptions> {
     const { thread } = getChannelAndThreadDiscussion(dto.nickname, this.client);
 
     if (!thread)
@@ -29,7 +29,7 @@ export class BanPollStartCommand implements DiscordTransformedCommand<PollDto> {
         ephemeral: true
       });
 
-    await context.interaction.deferReply();
+    await interaction.deferReply();
 
     await thread.send({
       embeds: [
@@ -52,7 +52,7 @@ export class BanPollStartCommand implements DiscordTransformedCommand<PollDto> {
       thread.setLocked(true),
     ]);
 
-    await context.interaction.editReply(addPollButton(lastMessage.url, {
+    await interaction.editReply(addPollButton(lastMessage.url, {
       embeds: [
         new EmbedBuilder()
           .setTitle('Inizio sondaggio')

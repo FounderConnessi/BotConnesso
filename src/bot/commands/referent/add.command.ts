@@ -1,20 +1,20 @@
 
-import { TransformPipe } from '@discord-nestjs/common';
-import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, UsePipes } from '@discord-nestjs/core';
+import { Handler, IA, InjectDiscordClient, SubCommand } from "@discord-nestjs/core";
 import { InteractionReplyOptions, Client } from 'discord.js';
 import { ReferentDto } from 'src/bot/dto/referent.dto';
 import { FoundersService } from 'src/founders/founders.service';
+import { SlashCommandPipe } from "@discord-nestjs/common";
 
-@UsePipes(TransformPipe)
 @SubCommand({ name: 'add', description: 'Aggiungi un referente' })
-export class AddReferentCommand implements DiscordTransformedCommand<ReferentDto> {
+export class AddReferentCommand {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
     private readonly founders: FoundersService,
   ) { }
 
-  async handler(@Payload() dto: ReferentDto): Promise<InteractionReplyOptions> {
+  @Handler()
+  async handler(@IA(SlashCommandPipe) dto: ReferentDto): Promise<InteractionReplyOptions> {
     const user = await this.client.users.fetch(dto.id);
     const message = {
       ephemeral: true

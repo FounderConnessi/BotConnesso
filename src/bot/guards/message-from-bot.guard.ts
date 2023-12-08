@@ -1,14 +1,16 @@
-import { DiscordGuard, InjectDiscordClient } from '@discord-nestjs/core';
-import { Client, Message } from 'discord.js';
+import { InjectDiscordClient } from '@discord-nestjs/core';
+import { Client } from 'discord.js';
+import { CanActivate, ExecutionContext } from "@nestjs/common";
 
-export class MessageFromBotGuard implements DiscordGuard {
+export class MessageFromBotGuard implements CanActivate{
 
   constructor(
     @InjectDiscordClient()
     private readonly client: Client
   ){}
 
-  canActive(event: 'messageCreate', [message]: [Message]): boolean {
+  canActivate(context: ExecutionContext): boolean {
+    const [message] = context.getArgs();
     return this.client.user == message.author;
   }
 }

@@ -1,14 +1,13 @@
-import { TransformPipe } from '@discord-nestjs/common';
-import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, UsePipes } from '@discord-nestjs/core';
+import { Handler, IA, InjectDiscordClient, SubCommand } from "@discord-nestjs/core";
 import { InteractionReplyOptions, EmbedBuilder, TextChannel, Client, Colors } from 'discord.js';
 import { BanService } from 'src/ban/ban.service';
 import { Gravity, translateGravity } from 'src/bot/definitions/gravity';
 import { BanDto } from 'src/bot/dto';
 import { addDiscussionButton } from 'src/utils/utils';
+import { SlashCommandPipe } from "@discord-nestjs/common";
 
-@UsePipes(TransformPipe)
 @SubCommand({ name: 'user', description: 'Inserisci un utente nella blacklist' })
-export class BanUserCommand implements DiscordTransformedCommand<BanDto> {
+export class BanUserCommand {
 
   constructor(
     @InjectDiscordClient()
@@ -16,7 +15,8 @@ export class BanUserCommand implements DiscordTransformedCommand<BanDto> {
     private readonly ban: BanService
   ) { }
 
-  async handler(@Payload() dto: BanDto): Promise<InteractionReplyOptions> {
+  @Handler()
+  async onCommand(@IA(SlashCommandPipe) dto: BanDto): Promise<InteractionReplyOptions> {
     const ban = await this.ban.banUser(dto);
 
     if (ban.error)
@@ -54,8 +54,8 @@ export class BanUserCommand implements DiscordTransformedCommand<BanDto> {
         break;
     }
 
-    const banListchannel = this.client.channels.cache.get(process.env.CHANNEL_BANLIST_ID) as TextChannel;
-    await banListchannel.send(message);
+    const banListChannel = this.client.channels.cache.get(process.env.CHANNEL_BANLIST_ID) as TextChannel;
+    await banListChannel.send(message);
 
     embed.setDescription("Hai bannato il seguente utente:");
     return {

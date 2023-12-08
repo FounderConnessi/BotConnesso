@@ -1,20 +1,20 @@
-import { TransformPipe } from '@discord-nestjs/common';
-import { DiscordTransformedCommand, InjectDiscordClient, Payload, SubCommand, TransformedCommandExecutionContext, UsePipes } from '@discord-nestjs/core';
-import { InteractionReplyOptions, EmbedBuilder, Colors, Client } from 'discord.js';
+import { SlashCommandPipe } from "@discord-nestjs/common";
+import { Handler, IA, InjectDiscordClient, SubCommand } from "@discord-nestjs/core";
+import { InteractionReplyOptions, EmbedBuilder, Colors, Client, CommandInteraction } from "discord.js";
 import { ThreadDto } from 'src/bot/dto';
 import { FoundersService } from 'src/founders/founders.service';
 import { addPollButton, getChannelAndThreadDiscussion } from 'src/utils/utils';
 
-@UsePipes(TransformPipe)
 @SubCommand({ name: 'poll-end', description: 'Termina la votazione per la blacklist' })
-export class BanPollEndCommand implements DiscordTransformedCommand<ThreadDto> {
+export class BanPollEndCommand {
   constructor(
     @InjectDiscordClient()
     private readonly client: Client,
     private readonly founders: FoundersService
   ) { }
 
-  async handler(@Payload() dto: ThreadDto, context: TransformedCommandExecutionContext): Promise<InteractionReplyOptions> {
+  @Handler()
+  async onCommand(@IA(SlashCommandPipe) dto: ThreadDto, @IA() interaction: CommandInteraction): Promise<InteractionReplyOptions> {
     const { thread } = getChannelAndThreadDiscussion(dto.nickname, this.client);
 
     if (!thread)
@@ -31,7 +31,7 @@ export class BanPollEndCommand implements DiscordTransformedCommand<ThreadDto> {
         ephemeral: true
       };
 
-    await context.interaction.deferReply();
+    await interaction.deferReply();
 
     pollMessage = await (pollMessage.fetch());
 
@@ -57,7 +57,7 @@ export class BanPollEndCommand implements DiscordTransformedCommand<ThreadDto> {
     const duplicatedVotes = this.searchDuplicatedVotes(referentVotes);
 
     if (duplicatedVotes.length > 0) {
-      await context.interaction.editReply({
+      await interaction.editReply({
         content: `Ho riscontrato i seguenti voti duplicati: ${this.mentionUsers(duplicatedVotes)}`,
       });
       return;
@@ -96,7 +96,7 @@ export class BanPollEndCommand implements DiscordTransformedCommand<ThreadDto> {
       .setFooter({ text: 'FounderConnessi', iconURL: 'https://i.imgur.com/EayOzNt.png' })
       .setTimestamp();
 
-    await context.interaction.editReply(addPollButton(pollMessage.url, message));
+    await interaction.editReply(addPollButton(pollMessage.url, message));
   }
 
   addReferentVote(username: string, data: { [key: string]: number }) {

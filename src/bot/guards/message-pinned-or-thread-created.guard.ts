@@ -1,9 +1,9 @@
-import { DiscordGuard } from '@discord-nestjs/core';
-import { Message, MessageType } from 'discord.js';
+import { MessageType } from 'discord.js';
+import { CanActivate, ExecutionContext } from "@nestjs/common";
+export class MessagePinnedOrThreadCreated implements CanActivate {
 
-export class MessagePinnedOrThreadCreated implements DiscordGuard {
-
-  canActive(event: 'messageCreate', [message]: [Message]): boolean {
+  canActivate(context: ExecutionContext): boolean {
+    const [message] = context.getArgs();
     return message.type === MessageType.ChannelPinnedMessage || message.type === MessageType.ThreadCreated;
   }
 }
