@@ -43,6 +43,17 @@ export class BanThreadCommand {
       };
     }
 
+    if (await this.utils.getUuid(dto.nickname) == undefined) {
+      return {
+        content: '⠀\n' +
+          '<a:2333verifyred:1063075026418544680> **ERRORE: UTENTE NON PREMIUM**\n' +
+          'Per poter segnalare un giocatore affinché venga bannato da FounderConnessi,\n' +
+          'è necessario che disponga di un account premium di sua proprietà.\n' +
+          '⠀',
+        ephemeral: true
+      };
+    }
+
     let { channel, thread } = getChannelAndThreadDiscussion(dto.nickname, this.client);
 
     if (thread)
