@@ -27,6 +27,7 @@ import { UtilsModule } from './utils/utils.module';
           intents: [ 
             GatewayIntentBits.Guilds, 
             GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.GuildMembers,
             GatewayIntentBits.GuildMessageReactions,
             GatewayIntentBits.MessageContent,
           ],

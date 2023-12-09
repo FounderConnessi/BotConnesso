@@ -10,7 +10,7 @@ export class FoundersService {
   ) {
     this.get().then(founders => {
       founders.forEach(founder => {
-        this.cache[founder.id] = founder.isReferent;
+        this.cache[founder.id] = true;
       });
     });
   }
@@ -21,45 +21,23 @@ export class FoundersService {
     return await this.prisma.founder.findMany();
   }
 
-  async exists(id: string) {
-    const founder = await this.prisma.founder.findFirst({
-      where: {
-        id
-      }
-    });
-    return founder != undefined;
-  }
-
-  async add(dto: AddFounderDto) {
-    const isReferent = dto.isReferent ? dto.isReferent : false;
-    this.cache[dto.id] = isReferent;
+  async addReferent(dto: AddFounderDto) {
+    this.cache[dto.id] = true;
     return await this.prisma.founder.create({
       data: {
         id: dto.id,
-        username: dto.username,
-        isReferent
+        username: dto.username
       }
     });
   }
 
-  async remove(id: string) {
+  async removeReferent(id: string) {
+    this.cache[id] = false;
     return await this.prisma.founder.delete({
       where: {
         id,
       }
     });
-  }
-
-  async setReferent(id: string, referent: boolean) {
-    await this.prisma.founder.update({
-      where: {
-        id,
-      },
-      data: {
-        isReferent: referent
-      }
-    });
-    this.cache[id] = referent;
   }
 
   async isReferent(id: string): Promise<boolean> {
@@ -68,8 +46,7 @@ export class FoundersService {
       return cachedValue as boolean;
     const ref = await this.prisma.founder.findFirst({
       where: {
-        id,
-        isReferent: true
+        id
       }
     });
     const isReferent = ref != undefined;

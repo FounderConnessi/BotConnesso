@@ -1,5 +1,5 @@
 import { Handler, SubCommand } from "@discord-nestjs/core";
-import { EmbedBuilder, InteractionReplyOptions } from "discord.js";
+import { InteractionReplyOptions } from "discord.js";
 
 @SubCommand({ name: 'list', description: 'Consulta la lista degli utenti nella blacklist' })
 export class BanListCommand {

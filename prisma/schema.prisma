@@ -22,9 +22,8 @@ model Ban {
 model Founder {
   id       String  @id
   username String  @unique
-  isReferent Boolean @default(false)
 
-  @@map("discord_founders")
+  @@map("discord_referents")
 }
 
 enum Gravity {

@@ -13,8 +13,6 @@ import { BanPollStartCommand } from './commands/ban/poll/poll-start.command';
 import { BanThreadCommand } from './commands/ban/thread.command';
 import { BanUserCommand } from './commands/ban/user.command';
 import { UnbanUserCommand } from './commands/unban/unban.command';
-import { AddReferentCommand } from './commands/referent/add.command';
-import { RemoveReferentCommand } from './commands/referent/remove.command';
 @Module({
   imports: [
     DiscordModule.forFeature(),
@@ -32,8 +30,6 @@ import { RemoveReferentCommand } from './commands/referent/remove.command';
     BanListCommand,
     BanPollStartCommand,
     BanPollEndCommand,
-    AddReferentCommand,
-    RemoveReferentCommand
   ],
 })
 export class BotModule {}
