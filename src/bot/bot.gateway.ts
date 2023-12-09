@@ -1,6 +1,15 @@
 import { InjectDiscordClient, On, Once } from "@discord-nestjs/core";
 import { Injectable, Logger, UseGuards } from "@nestjs/common";
-import { Client, GuildChannel, GuildMember, Message, MessageReaction, PartialGuildMember, User } from "discord.js";
+import {
+  Client,
+  GuildChannel,
+  GuildMember,
+  Message,
+  MessageReaction,
+  PartialGuildMember,
+  TextChannel,
+  User
+} from "discord.js";
 import { UtilsService } from "src/utils/utils.service";
 import { Cron } from "@nestjs/schedule";
 import { MessageAfterPollStarted, MessageFromBotGuard, MessagePinnedOrThreadCreated, PollReaction } from "./guards";
@@ -57,14 +66,13 @@ export class BotGateway {
       const user = newMember.user;
       const userId = user.id;
 
-      if (hasRoleAfter){
+      if (hasRoleAfter) {
         const success = await this.founders.addReferent({ id: userId, username: user.username });
         if (success)
           this.logger.log(`Added ${user.username} to referents`);
         else
           this.logger.warn(`Failed to add ${user.username} to referents`);
-      }
-      else{
+      } else {
         const success = await this.founders.removeReferent(userId);
         if (success)
           this.logger.log(`Removed ${user.username} from referents`);
@@ -108,5 +116,33 @@ export class BotGateway {
       this.changeChannelName(process.env.CHANNEL_SC_ID, "Server Connessi: " + counters.serverCount);
       this.changeChannelName(process.env.CHANNEL_FC_ID, "Founder Connessi: " + counters.founderCount);
     });
+  }
+
+  @Cron("0 8 * * 1", {
+    timeZone: "Europe/Rome"
+  })
+  async sendWeeklyMeetUp() {
+    const channel = this.client.channels.cache.get(process.env.CHANNEL_MEETUP_ID) as TextChannel;
+    const days = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+    const hours = ["18:00", "18:30", "19:00", "21:00", "21:30"];
+
+    const day = days[this.randomInt(days.length)];
+    const hour = hours[this.randomInt(hours.length)];
+
+    await channel.send('⠀\n' +
+      '<:FounderConnessi:1063045748586975302> **MEET UP SETTIMANALE DEI FOUNDER!**\n' +
+      'Come ogni settimana, è arrivato il momento di fissare l\'incontro per\n' +
+      'fare quattro chiacchiere, conoscerci meglio e, chissà, mettere le basi\n' +
+      'per future nuove collaborazioni tra server. La data è casuale!\n' +
+      '\n' +
+      'Data: **' + day + ' alle ore ' + hour + '**\n' +
+      '\n' +
+      'Ti aspettiamo <:Preferito:970705220197826630> \n' +
+      '⠀');
+    await channel.lastMessage.react('📅');
+  }
+
+  private randomInt(max: number) {
+    return Math.floor(Math.random() * max);
   }
 }
