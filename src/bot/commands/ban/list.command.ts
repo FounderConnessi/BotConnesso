@@ -9,7 +9,7 @@ export class BanListCommand {
     return {
       content: '⠀\n' +
           '<:FounderConnessi:1063045748586975302> **LISTA UTENTI BLACKLISTATI**\n' +
-          'Scopri sul sito la lista dei giocatori blacklistati dai server di FounderConnessi,\n' +
+          'Scopri sul [sito](https://founderconnessi.it/lista-ban) la lista dei giocatori blacklistati dai server di FounderConnessi,\n' +
           'il motivo della segnalazione e la gravità scelta dalla maggioranza dei founder. \n' +
           '⠀',
       ephemeral: true

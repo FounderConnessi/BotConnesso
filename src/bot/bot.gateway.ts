@@ -137,7 +137,7 @@ export class BotGateway {
       '\n' +
       'Data: **' + day + ' alle ore ' + hour + '**\n' +
       '\n' +
-      'Ti aspettiamo <:Preferito:970705220197826630> \n' +
+      'Ti aspettiamo <:1666iconthereeroles:1063075024514330666> \n' +
       '⠀');
     await channel.lastMessage.react('📅');
   }
