@@ -1,13 +1,13 @@
-import { DiscordModule } from '@discord-nestjs/core';
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
-import { GatewayIntentBits, Partials } from 'discord.js'
-import { BanModule } from './ban/ban.module';
-import { BotModule } from './bot/bot.module';
-import { FoundersModule } from './founders/founders.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { UtilsModule } from './utils/utils.module';
+import { DiscordModule } from "@discord-nestjs/core";
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { ScheduleModule } from "@nestjs/schedule";
+import { GatewayIntentBits, Partials } from "discord.js";
+import { BanModule } from "./ban/ban.module";
+import { BotModule } from "./bot/bot.module";
+import { FoundersModule } from "./founders/founders.module";
+import { PrismaModule } from "./prisma/prisma.module";
+import { UtilsModule } from "./utils/utils.module";
 
 @Module({
   imports: [
@@ -34,6 +34,7 @@ import { UtilsModule } from './utils/utils.module';
           partials:[
             Partials.Message,
             Partials.Channel,
+            Partials.GuildMember,
             Partials.Reaction          
           ]
         },

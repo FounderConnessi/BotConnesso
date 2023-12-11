@@ -34,6 +34,14 @@ export class BotGateway {
     this.logger.log(
       `Logged in as ${this.client.user.tag}!`
     );
+
+    const guild = await this.client.guilds.fetch(process.env.GUILD_ID);
+
+    this.logger.log("Fetching members...");
+
+    await guild.members.fetch();
+
+    this.logger.log("Members fetched!");
   }
 
   /**
@@ -58,7 +66,7 @@ export class BotGateway {
    * Gestisco il cambio del ruolo di Referente.
    */
   @On("guildMemberUpdate")
-  async onGuildMemberUpdate(oldMember : GuildMember | PartialGuildMember, newMember: GuildMember | PartialGuildMember) {
+  async onGuildMemberUpdate(oldMember : GuildMember, newMember: GuildMember) {
     const hadVoteRole = oldMember.roles.cache.has(process.env.VOTE_ROLE_ID);
     const hadBanRole = oldMember.roles.cache.has(process.env.BAN_ROLE_ID);
     const hasVoteRole = newMember.roles.cache.has(process.env.VOTE_ROLE_ID);
