@@ -58,20 +58,26 @@ export class BotGateway {
    * Gestisco il cambio del ruolo di Referente.
    */
   @On("guildMemberUpdate")
-  async onGuildMemberUpdate(oldMember: GuildMember | PartialGuildMember, newMember: GuildMember | PartialGuildMember) {
-    const roleIdToCheck = process.env.VOTE_ROLE_ID;
-    const hasRoleAfter = newMember.roles.cache.has(roleIdToCheck);
+  async onGuildMemberUpdate(oldMember : GuildMember | PartialGuildMember, newMember: GuildMember | PartialGuildMember) {
+    const hadVoteRole = oldMember.roles.cache.has(process.env.VOTE_ROLE_ID);
+    const hadBanRole = oldMember.roles.cache.has(process.env.BAN_ROLE_ID);
+    const hasVoteRole = newMember.roles.cache.has(process.env.VOTE_ROLE_ID);
+    const hasBanRole = newMember.roles.cache.has(process.env.BAN_ROLE_ID);
 
-    if (oldMember.roles.cache.has(roleIdToCheck) !== hasRoleAfter) {
+    if((hadBanRole !== hasBanRole && hasVoteRole) || hadVoteRole !== hasVoteRole) {
       const user = newMember.user;
       const userId = user.id;
 
-      if (hasRoleAfter) {
-        const success = await this.founders.addReferent({ id: userId, username: user.username });
+      if (hasVoteRole) {
+        const success = await this.founders.addReferent({
+          id: userId,
+          username: user.username,
+          banRole: hasBanRole
+        });
         if (success)
-          this.logger.log(`Added ${user.username} to referents`);
+          this.logger.log(`Added ${user.username} to referents with banRole=${hasBanRole}`);
         else
-          this.logger.warn(`Failed to add ${user.username} to referents`);
+          this.logger.warn(`Failed to add ${user.username} to referents with banRole=${hasBanRole}`);
       } else {
         const success = await this.founders.removeReferent(userId);
         if (success)
@@ -88,12 +94,10 @@ export class BotGateway {
   @UseGuards(PollReaction)
   @On("messageReactionAdd")
   async OnMessageReact(reaction: MessageReaction, user: User) {
-    this.founders.isReferent(user.id).then(
-      isReferent => {
-        if (!isReferent)
-          reaction.users.remove(user.id);
-      }
-    );
+    this.founders.canVote(user.id).then(canVote => {
+      if (!canVote)
+        reaction.users.remove(user);
+    });
   }
 
   /**
@@ -129,17 +133,17 @@ export class BotGateway {
     const day = days[this.randomInt(days.length)];
     const hour = hours[this.randomInt(hours.length)];
 
-    await channel.send('⠀\n' +
-      '<:FounderConnessi:1063045748586975302> **MEET UP SETTIMANALE DEI FOUNDER!**\n' +
-      'Come ogni settimana, è arrivato il momento di fissare l\'incontro per\n' +
-      'fare quattro chiacchiere, conoscerci meglio e, chissà, mettere le basi\n' +
-      'per future nuove collaborazioni tra server. La data è casuale!\n' +
-      '\n' +
-      'Data: **' + day + ' alle ore ' + hour + '**\n' +
-      '\n' +
-      'Ti aspettiamo <:1666iconthereeroles:1063075024514330666> \n' +
-      '⠀');
-    await channel.lastMessage.react('📅');
+    await channel.send("⠀\n" +
+      "<:FounderConnessi:1063045748586975302> **MEET UP SETTIMANALE DEI FOUNDER!**\n" +
+      "Come ogni settimana, è arrivato il momento di fissare l'incontro per\n" +
+      "fare quattro chiacchiere, conoscerci meglio e, chissà, mettere le basi\n" +
+      "per future nuove collaborazioni tra server. La data è casuale!\n" +
+      "\n" +
+      "Data: **" + day + " alle ore " + hour + "**\n" +
+      "\n" +
+      "Ti aspettiamo <:1666iconthereeroles:1063075024514330666> \n" +
+      "⠀");
+    await channel.lastMessage.react("📅");
   }
 
   private randomInt(max: number) {

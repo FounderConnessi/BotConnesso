@@ -45,7 +45,7 @@ export class BanPollEndCommand {
       const foundersId = (await reaction.users.fetch()).map(user => user.id);
       let lawfulVotes = foundersId.length;
       for (const id of foundersId) {
-        if (!await this.founders.isReferent(id)) {
+        if (!await this.founders.canVote(id)) {
           await pollMessage.reactions.resolve(emoji).users.remove(id);
           lawfulVotes--;
         } else

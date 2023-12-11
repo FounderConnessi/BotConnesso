@@ -22,6 +22,7 @@ model Ban {
 model Founder {
   id       String  @id
   username String  @unique
+  banRole Boolean @default(false)
 
   @@map("discord_referents")
 }
